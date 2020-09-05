@@ -3,19 +3,96 @@ import './general';
 class Memes {
   constructor() {
     console.log("Memes JS File");
+    this.$topTextInput = document.getElementById("topText");
+    this.$bottomTextInput = document.getElementById("bottomText");
+    this.$imageInput = document.getElementById("image");
+    this.$downloadButton = document.getElementById("downloadMeme");
+    this.$canvas = document.getElementById("imgCanvas");
+    // these are not in the book
+    this.$defaultImage = document.querySelector('#defaultImage');
+    this.image = this.$defaultImage
+    this.$context = this.$canvas.getContext('2d');
+    this.deviceWidth = window.innerWidth;
+    this.createCanvas();
+    this.createMeme();
+    this.addEventListeners();
+  }
+  createCanvas() {
+    this.$canvas.width = Math.min(640, this.deviceWidth - 30);
+    this.$canvas.height = Math.min(480, this.deviceWidth);
+  }
+  createMeme() {
+    //clear image
+    this.$context.clearRect(0, 0, this.$canvas.height, this.$canvas.width);
+
+    //draw the image
+    this.$canvas.height = this.image.height;
+    this.$canvas.width = this.image.width;
+    //this.resizeCanvas(this.$canvas.height, this.$canvas.width);
+    this.$context.drawImage(this.image, 0, 0);
+
+    //setup text for drawing
+    const fontSize = ((this.$canvas.width + this.$canvas.height) / 2) * 4 / 100;
+    this.$context.font = `${fontSize}pt sans-serif`;
+    this.$context.textAlign = 'center';
+    this.$context.textBaseLine = 'top';
+    this.$context.lineJoin = 'round';
+    this.$context.ineWidth = fontSize / 5;
+    this.$context.strokeStyle = 'black';
+    this.$context.fillStyle = 'white';
+
+    //get the default text from the user interface (UI)
+    const topText = this.$topTextInput.value.toUpperCase();
+    const bottomText = this.$bottomTextInput.value.toUpperCase();
+    this.$context.strokeText(topText, this.$canvas.width / 2, this.$canvas.height * (5100));
+    this.$context.fillText(topText, this.$canvas.width / 2, this.$canvas.height * (5 / 100));
+    this.$context.strokeText(bottomText, this.$canvas.width / 2, this.$canvas.height * (90 / 100));
+    this.$context.fillText(bottomText, this.$canvas.width / 2, this.$canvas.height * (90 / 100));
+
+  }
+  addEventListeners() {
+    this.createMeme = this.createMeme.bind(this);
+    let inputNodes = [this.$topTextInput, this.$bottomTextInput];
+
+    inputNodes.forEach(element => element.addEventListener('keyup', this.createMeme));
+    inputNodes.forEach(element => element.addEventListener('change', this.createMeme));
+
+    this.downloadMeme = this.downloadMeme.bind(this);
+    this.$downloadButton.addEventListener("click", this.downloadMeme);
+
+    this.loadImage = this.loadImage.bind(this);
+    this.$imageInput.addEventListener("change", this.loadImage)
+
+  }
+  downloadMeme() {
+    const imageSource = this.$canvas.toDataURL('image/png');
+    this.$downloadButton.setAttribute('href', imageSource);
+  }
+  loadImage() {
+    if (this.$imageInput.files && this.$imageInput.files[0]) {
+      let reader = new FileReader();
+      reader.onload = () => {
+        this.image = new Image();
+        this.image.onload = () => {
+          this.createMeme();
+        };
+        this.image.src = reader.result;
+      };
+      reader.readAsDataURL(this.$imageInput.files[0]);
+    }
   }
 }
 new Memes();
 
-/*  
+/*
 Create a class called Memes
 - Part 1 - Setup the canvas and draw the default meme
   - Initialize instance variables for all of the ui elements in the constructor
-      this.$topTextInput = 
-      this.$bottomTextInput = 
-      this.$imageInput = 
-      this.$downloadButton = 
-      this.$canvas = 
+      this.$topTextInput =
+      this.$bottomTextInput =
+      this.$imageInput =
+      this.$downloadButton =
+      this.$canvas =
       // these are not in the book
       this.$defaultImage = document.querySelector('#defaultImage');
       this.image = this.$defaultImage
@@ -31,7 +108,7 @@ Create a class called Memes
       - initialize the height and width of the canvas to the height and width of the (default) image
       - draw the image on the context
     - setup text drawing
-      - initialize a local constant for the font size.  Here's the calculation   
+      - initialize a local constant for the font size.  Here's the calculation
         this.$canvas.width+this.$canvas.height)/2)*4/100;
       - set the font of the context to `${fontSize}pt sans-serif`
         Notice the template literal instead of concatenation!
@@ -43,7 +120,7 @@ Create a class called Memes
     - draw the text
       - get the default top and bottom text from the ui and put both in a variable
       - make sure both of them are all caps
-      - write them on the context 
+      - write them on the context
       - don't forget to outline the text in black!
     - add a call to this method in the constructor
   END OF PART 1 - TEST AND DEBUG YOUR CODE - YOU SHOULD SEE THE MEME ON THE PAGE
